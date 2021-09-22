@@ -21,6 +21,4 @@ s.bind('tcp://*:8001')
 
 datos = s.recv_string()
 
-resultado = calcServer(datos)
-
-s.send_string(resultado)
+s.send_string('mundo...')
