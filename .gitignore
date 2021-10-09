@@ -1,2 +1,4 @@
 cli-ser
 *.txt
+*__pycache__
+multi-server
