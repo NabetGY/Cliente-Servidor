@@ -1,6 +1,7 @@
 import zmq
 import sys
 import json
+import hashlib
 import os
   
 parameters = {
@@ -10,6 +11,18 @@ parameters = {
 }
 
 ipServer = os.popen('ip addr show ztc3q6fy2x | grep "\<inet\>" | awk \'{ print $2 }\' | awk -F "/" \'{ print $1 }\'').read().strip()
+
+#############################################################################################3
+
+# BUF_SIZE is totally arbitrary, change for your app!
+BUF_SIZE = 65536  # lets read stuff in 64kb chunks!
+SIZE = 512
+
+def megaToSha(megabyte):
+    hash_object = hashlib.sha1( megabyte )
+    name = hash_object.hexdigest()
+    nameAsNum = int( name, 16 )
+    return nameAsNum
 
 
 ###########################################################################################################################################
@@ -66,6 +79,35 @@ def menu( server, rango, predecesor, sucesor ):
             server.send_string( parameters.get('id') )
             
             status( rango, predecesor, sucesor )
+            
+            
+        elif ( opciones.get( 'opcion' ) == 'upload' ):
+            
+            server.send_string('ok') 
+            mbyte = server.recv_multipart()
+            
+            hashMb = megaToSha( mbyte[0] )
+                        
+            if rango.member(hashMb):
+                print('es mio...')
+                fileName = str( hashMb )
+                with open( fileName, 'ab' ) as file:
+                    file.write( mbyte[0] )
+                    resp = {
+                        'opcion' : 'exito'
+                    }
+
+                    data = json.dumps(resp)
+                    server.send_json(data)
+                    
+            else:
+                infoSucesor = {
+                    'sucesor': sucesor,
+                    'opcion' : 'noEsMIO'
+                }
+
+                data = json.dumps(infoSucesor)
+                server.send_json(data)
 
 
 #############################################################################################3
@@ -75,7 +117,7 @@ def bootstrap():
     serverOne = context.socket(zmq.REP)
     miSucesor = ipServer
     miPredecesor = ipServer
-    miRango = Range(0, 64)
+    miRango = Range(0, pow(2,160))
 
     serverOne.bind('tcp://'+ipServer+':8001')
     print('Servidor inicial...')
@@ -167,9 +209,12 @@ class Range:
     
     def toStr(self):
         if self.isFirst():
-            return '[' + str(self.lb) + ' , 64) U [' + '0 , ' +  str(self.ub) + ')'
+            return '[' + str(self.lb) + ' , 2**160) U [' + '0 , ' +  str(self.ub) + ')'
         else:
             return '[' + str (self.lb) + ' , ' + str(self.ub) + ')'
+
+
+
 
 
 #############################################################################################3
