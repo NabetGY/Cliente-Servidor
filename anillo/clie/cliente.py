@@ -77,7 +77,7 @@ def upload(params, server):
                     respuestaJSON = server.recv_json()
                     respuesta = json.loads(respuestaJSON)
                     print(respuesta)
-                    if ( respuesta.get( 'opcion' ) == 'noEsMIO' ):
+                    if ( respuesta.get( 'opcion' ) == 'noEsMio' ):
                         print('no era de el...')
                         siguiente = respuesta.get( 'sucesor' )
                         context = zmq.Context()
@@ -92,8 +92,9 @@ def upload(params, server):
                 
         print('termine de subir') 
 
-def download(params, ranges, server ):
+def download(params, server ):
 
+    
 
     with open(params.get('fileName'), 'r' ) as index:
         fileName2  = index.readline()
@@ -104,26 +105,39 @@ def download(params, ranges, server ):
             while True:
                 hashMb = index.readline()
                 print(hashMb)
-                if ( len(hashMb)==0 ): 
+                if ( len(hashMb)==0 ):
                     break
                 
                 hashMb = int(hashMb)
-                for range in ranges:
+                
+                params['fileName']=hashMb
+                data = json.dumps(params)
+                server.send_json(data)
+                
+                respuestaJSON = server.recv_json()
+                respuesta = json.loads(respuestaJSON)
+                
+                while (respuesta.get('opcion') == 'noEsMio'):
+                    
+                    print('no era de el...')
+                    siguiente = respuesta.get( 'sucesor' )
+                    context = zmq.Context()
+                    server = context.socket(zmq.REQ)
+                    server.connect('tcp://'+siguiente+':8001')
+                    
+                    
+                    data = json.dumps(params)
+                    server.send_json(data)
+                    
+                    respuestaJSON = server.recv_json()
+                    respuesta = json.loads(respuestaJSON)
+                
+                server.send_string('Envielo')
+                
+                byte = server.recv_multipart()
+                
+                file.write(byte[0])
     
-                    if range.member(hashMb):
-
-                        socket = server.get(range.lb)
-
-                        params['fileName'] = hashMb
-
-                        data = json.dumps(params)
-
-                        server.send_string(data)
-                        byte = socket.recv_multipart()
-        
-                        file.write(byte[0])
-
-                        break
     
     
 

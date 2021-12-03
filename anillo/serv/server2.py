@@ -98,7 +98,7 @@ def menu( server, rango, predecesor, sucesor ):
             hashMb = megaToSha( mbyte[0] )
                         
             if rango.member(hashMb):
-                print('es mio...')
+                
                 fileName = str( hashMb )
                 with open( fileName, 'ab' ) as file:
                     file.write( mbyte[0] )
@@ -112,7 +112,7 @@ def menu( server, rango, predecesor, sucesor ):
             else:
                 infoSucesor = {
                     'sucesor': sucesor,
-                    'opcion' : 'noEsMIO'
+                    'opcion' : 'noEsMio'
                 }
 
                 data = json.dumps(infoSucesor)
@@ -122,13 +122,16 @@ def menu( server, rango, predecesor, sucesor ):
             
             
             hashMb = opciones.get('fileName')
+        
+            
+            archivo = str(hashMb)
             
             if rango.member(hashMb):
-                with open(fileName, 'rb') as file:
+                with open(archivo, 'rb') as file:
                     mByte = file.read()
                     
                     infoSucesor = {
-                    'opcion' : 'esMIO'
+                    'opcion' : 'esMio'
                     }
                     
                     data = json.dumps(infoSucesor)
@@ -141,11 +144,12 @@ def menu( server, rango, predecesor, sucesor ):
             else:
                 infoSucesor = {
                     'sucesor': sucesor,
-                    'opcion' : 'noEsMIO'
+                    'opcion' : 'noEsMio'
                 }
                 
                 data = json.dumps(infoSucesor)
                 server.send_json(data)
+                
 
 #############################################################################################3
 
