@@ -2,3 +2,7 @@ cli-ser
 *.txt
 *__pycache__
 multi-server
+*.jpg
+*.index
+.metals
+.vscode
