@@ -3,14 +3,23 @@ import sys
 import json
 import hashlib
 import os
-  
-parameters = {
-    'id': sys.argv[1],
-    'opcion': sys.argv[2],
-    'ip': sys.argv[3] if sys.argv[2] != '--bootstrap' else None
-}
 
 ipServer = os.popen('ip addr show ztc3q6fy2x | grep "\<inet\>" | awk \'{ print $2 }\' | awk -F "/" \'{ print $1 }\'').read().strip()
+
+
+def sha1Serv(serverName):
+    hash_object = hashlib.sha1(serverName.encode())
+    name = hash_object.hexdigest()
+    nameAsNum=int(name,16)
+    return nameAsNum
+
+
+parameters = {
+    'id': str(sha1Serv(str(ipServer))),
+    'opcion': sys.argv[1],
+    'ip': sys.argv[2] if sys.argv[1] != '--bootstrap' else None
+}
+
 
 #############################################################################################3
 
@@ -109,6 +118,34 @@ def menu( server, rango, predecesor, sucesor ):
                 data = json.dumps(infoSucesor)
                 server.send_json(data)
 
+        elif ( opciones.get( 'opcion' ) == 'download' ):
+            
+            
+            hashMb = opciones.get('fileName')
+            
+            if rango.member(hashMb):
+                with open(fileName, 'rb') as file:
+                    mByte = file.read()
+                    
+                    infoSucesor = {
+                    'opcion' : 'esMIO'
+                    }
+                    
+                    data = json.dumps(infoSucesor)
+                    server.send_json(data)
+                    
+                    server.recv_string()
+                    
+                    server.send_multipart([mByte])
+                    
+            else:
+                infoSucesor = {
+                    'sucesor': sucesor,
+                    'opcion' : 'noEsMIO'
+                }
+                
+                data = json.dumps(infoSucesor)
+                server.send_json(data)
 
 #############################################################################################3
 
