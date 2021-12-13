@@ -87,7 +87,7 @@ class Server:
         if ConnectionType == 'bootstrap':
             self.bootstrap()
         else:
-            self.connect( ConnectionType, ipConnection )
+            self.connect( ipConnection )
 
     def bootstrap( self ):
 
@@ -104,8 +104,8 @@ class Server:
     def connect( self, ipConnection ):
         context = zmq.Context()
 
-        client = context.socket( zmq.REQ )
-        client.connect( "tcp://" + ipConnection )
+        cliente = context.socket( zmq.REQ )
+        cliente.connect( "tcp://" + ipConnection )
         print( "Soy nuevo y trato de ubicarme!..." )
         print( "\n" )
 
