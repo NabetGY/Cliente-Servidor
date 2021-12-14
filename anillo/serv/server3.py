@@ -47,6 +47,8 @@ def status( rango, predecesor, sucesor ):
 
 
 ######################################################################################################################
+
+
 def megaToSha( megabyte ):
     hash_object = hashlib.sha1( megabyte )
     name = hash_object.hexdigest()
@@ -141,6 +143,9 @@ class Server:
 
                 idSucesor = cliente.recv_string()
                 self.range = Range( int( idSucesor ), int( self.id ) )
+
+                self.balance( cliente )
+
                 cliente.close()
 
                 self.socket = context.socket( zmq.REP )
@@ -155,6 +160,22 @@ class Server:
 
                 cliente = context.socket( zmq.REQ )
                 cliente.connect( "tcp://" + siguiente + ":8001" )
+
+    def balance( self, cliente ):
+
+        cliente.send_string( 'balance' )
+        while True:
+
+            mbyte = cliente.recv_multipart()
+            cliente.send_string( 'ok' )
+
+            if mbyte[ 0 ] == False:
+                return
+
+            hashMb = megaToSha( mbyte[ 0 ] )
+            fileName = str( hashMb )
+            with open( fileName, "ab" ) as file:
+                file.write( mbyte[ 0 ] )
 
     def menu( self ):
 
@@ -250,6 +271,26 @@ class Server:
 
                     data = json.dumps( infoSucesor )
                     self.socket.send_json( data )
+
+            elif opciones.get( "opcion" ) == "balance":
+
+                files = os.listdir( '.' )
+
+                for item in files:
+
+                    hashMb = opciones.get( item )
+
+                    archivo = str( hashMb )
+
+                    if not self.range.member( hashMb ):
+                        with open( archivo, "rb" ) as file:
+                            mByte = file.read()
+
+                            self.socket.send_multipart( [ mByte, True ] )
+                            self.socket.recv_string()
+                            os.remove( archivo )
+
+                self.socket.send_multipart( [ False ] )
 
 
 #############################################################################################
