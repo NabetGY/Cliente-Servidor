@@ -167,7 +167,7 @@ class Server:
             "opcion": "balance",
         }
         dataJSON = json.dumps( data )
-        cliente.socket.send_json( dataJSON )
+        cliente.send_json( dataJSON )
         while True:
 
             mbyte = cliente.recv_multipart()
@@ -282,11 +282,8 @@ class Server:
 
                 for item in files:
 
-                    hashMb = opciones.get( item )
-
-                    archivo = str( hashMb )
-
-                    if not self.range.member( hashMb ):
+                    if item != 'server3.py' and not self.range.member(
+                            int( item ) ):
                         with open( archivo, "rb" ) as file:
                             mByte = file.read()
 
