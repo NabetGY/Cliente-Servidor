@@ -74,7 +74,7 @@ class Server:
         self.id = str( sha1Serv( str( self.ip ) ) )
         self.socket = None
         self.successor = ''
-        self.predeccessor = ''
+        self.predecessor = ''
         self.range = None
         self.bootstrap_or_connect( ConnectionType, ipConnection )
 
@@ -86,7 +86,7 @@ class Server:
         )
 
     def bootstrap_or_connect( self, ConnectionType, ipConnection ):
-        if ConnectionType == 'bootstrap':
+        if ConnectionType == '--bootstrap':
             self.bootstrap()
         else:
             self.connect( ipConnection )
@@ -94,7 +94,7 @@ class Server:
     def bootstrap( self ):
 
         self.successor = self.ip
-        self.predeccessor = self.ip
+        self.predecessor = self.ip
         self.range = Range( 0, pow( 2, 160 ) )
         context = zmq.Context()
         self.socket = context.socket( zmq.REP )
@@ -130,6 +130,8 @@ class Server:
                 self.successor = opciones.get( "sucesor" )
                 self.predecessor = opciones.get( "predecesor" )
 
+                self.balance( cliente )
+
                 cliente = context.socket( zmq.REQ )
                 cliente.connect( "tcp://" + self.predecessor + ":8001" )
 
@@ -143,8 +145,6 @@ class Server:
 
                 idSucesor = cliente.recv_string()
                 self.range = Range( int( idSucesor ), int( self.id ) )
-
-                self.balance( cliente )
 
                 cliente.close()
 
@@ -163,7 +163,11 @@ class Server:
 
     def balance( self, cliente ):
 
-        cliente.send_string( 'balance' )
+        data = {
+            "opcion": "balance",
+        }
+        dataJSON = json.dumps( data )
+        cliente.socket.send_json( dataJSON )
         while True:
 
             mbyte = cliente.recv_multipart()
