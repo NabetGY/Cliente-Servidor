@@ -132,8 +132,10 @@ class Server:
 
                 self.balance( cliente )
 
-                cliente = context.socket( zmq.REQ )
-                cliente.connect( "tcp://" + self.predecessor + ":8001" )
+                cliente.close()
+
+                cliente2 = context.socket( zmq.REQ )
+                cliente2.connect( "tcp://" + self.predecessor + ":8001" )
 
                 newSucesor = {
                     "opcion": "newSucesor",
@@ -141,12 +143,12 @@ class Server:
                 }
 
                 newSucesorJSON = json.dumps( newSucesor )
-                cliente.send_json( newSucesorJSON )
+                cliente2.send_json( newSucesorJSON )
 
-                idSucesor = cliente.recv_string()
+                idSucesor = cliente2.recv_string()
                 self.range = Range( int( idSucesor ), int( self.id ) )
 
-                cliente.close()
+                cliente2.close()
 
                 self.socket = context.socket( zmq.REP )
                 self.socket.bind( "tcp://" + self.ip + ":8001" )
@@ -171,11 +173,11 @@ class Server:
         while True:
 
             mbyte = cliente.recv_multipart()
-            cliente.send_string( 'ok' )
 
-            if mbyte[ 0 ] == False:
+            if mbyte[ 0 ] == b'':
                 return
 
+            cliente.send_string( 'ok' )
             hashMb = megaToSha( mbyte[ 0 ] )
             fileName = str( hashMb )
             with open( fileName, "ab" ) as file:
@@ -197,7 +199,7 @@ class Server:
                 if pertenece:
 
                     serverData = {
-                        "sucesor": self.successor,
+                        "sucesor": self.ip,
                         "predecesor": self.predecessor,
                         "opcion": "loUbico",
                     }
@@ -218,11 +220,13 @@ class Server:
                     self.socket.send_json( data )
 
             elif opciones.get( "opcion" ) == "newSucesor":
+                print( 'entre a new sucesor' )
 
                 self.successor = opciones.get( "sucesor" )
                 self.socket.send_string( self.id )
 
                 status( self.range, self.predecessor, self.successor )
+                print( 'sali a new sucesor' )
 
             elif opciones.get( "opcion" ) == "upload":
 
@@ -277,21 +281,22 @@ class Server:
                     self.socket.send_json( data )
 
             elif opciones.get( "opcion" ) == "balance":
-
+                print( 'entro balance' )
                 files = os.listdir( '.' )
 
                 for item in files:
 
                     if item != 'server3.py' and not self.range.member(
                             int( item ) ):
-                        with open( archivo, "rb" ) as file:
+                        with open( item, "rb" ) as file:
                             mByte = file.read()
 
-                            self.socket.send_multipart( [ mByte, True ] )
+                            self.socket.send_multipart( [ mByte ] )
                             self.socket.recv_string()
-                            os.remove( archivo )
+                            os.remove( item )
 
-                self.socket.send_multipart( [ False ] )
+                self.socket.send_multipart( [ b'' ] )
+                print( 'finalizo balance' )
 
 
 #############################################################################################
